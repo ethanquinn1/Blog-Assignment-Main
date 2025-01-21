@@ -1,24 +1,32 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { Sequelize } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
 
-const BlogPost = sequelize.define('BlogPost', {
-  title: {
-    type: DataTypes.STRING(100),
-    allowNull: false
-  },
-  content: {
-    type: DataTypes.TEXT,
-    allowNull: false
-  },
-  author: {
-    type: DataTypes.STRING(100),
-    allowNull: false
-  }
-}, {
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: false
+// Initialize Sequelize with SQLite
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: path.join(__dirname, '../database.sqlite'),
+  logging: false
 });
 
-module.exports = { sequelize, BlogPost };
+// Import models
+const models = {};
+
+// Import User model
+const User = require('./user')(sequelize);
+models.User = User;
+
+// Try to import Blog model if it exists
+try {
+  const Blog = require('./blog')(sequelize);
+  models.Blog = Blog;
+} catch (err) {
+  console.log('Blog model not loaded:', err.message);
+}
+
+// Export models and sequelize instance
+module.exports = {
+  sequelize,
+  ...models
+};
 
