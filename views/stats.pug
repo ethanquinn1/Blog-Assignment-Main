@@ -1,10 +1,14 @@
 extends layout
 
 block content
-  p Average: #{average_length.toFixed(2)} characters
-  p Median: #{median_length.toFixed(2)} characters
-  p Maximum: #{max_length.toFixed(2)} characters
-  p Minimum: #{min_length.toFixed(2)} characters
-  br
-  p Total length of all posts: #{total_length.toFixed(2)} characters
-
+  .container
+    h1 Blog Statistics
+    include partials/messages
+    
+    .card.mt-4
+      .card-body
+        h5.card-title Blog Overview
+        ul.list-group.list-group-flush
+          li.list-group-item
+            strong Total Posts: 
+            span #{stats.totalPosts}

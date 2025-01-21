@@ -1,8 +1,25 @@
 extends layout
 
 block content
-  ul
-    each post in posts
-      li
-        a(href=`/post/${post.id}`) #{post.title} by #{post.author} (#{post.created_at.toLocaleDateString()})
+  .container
+    if user
+      h1 Welcome #{user.username}!
+    else
+      h1 Welcome to our Blog
+      p Please login or register to continue.
+    
+    include partials/messages
+
+    if posts && posts.length
+      .row.mt-4
+        each post in posts
+          .col-md-6.mb-4
+            .card
+              .card-body
+                h5.card-title= post.title
+                p.card-text= post.content
+                small.text-muted Posted on #{post.createdAt.toLocaleDateString()}
+    else
+      p.mt-4 No blog posts yet.
+
 

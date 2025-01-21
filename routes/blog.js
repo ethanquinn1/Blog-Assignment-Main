@@ -1,71 +1,78 @@
 const express = require('express');
 const router = express.Router();
-const { BlogPost } = require('../models');
+const { Blog } = require('../models');
+const { ensureAuthenticated } = require('../middleware/auth');
 
+// Get all blog posts
 router.get('/', async (req, res) => {
-  const posts = await BlogPost.findAll();
-  res.render('index', { title: 'Blog Posts', posts });
+  try {
+    const posts = await Blog.findAll({ order: [['createdAt', 'DESC']] });
+    res.render('index', { 
+      title: 'Home',
+      posts: posts
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash('error_msg', 'Error loading posts');
+    res.redirect('/');
+  }
 });
 
-router.get('/create', (req, res) => {
+// Create post form
+router.get('/create', ensureAuthenticated, (req, res) => {
   res.render('create', { title: 'Create Post' });
 });
 
-router.post('/create', async (req, res) => {
-  await BlogPost.create(req.body);
-  res.redirect('/');
-});
+// Create post handler
+router.post('/create', ensureAuthenticated, async (req, res) => {
+  try {
+    const { title, content } = req.body;
+    const errors = [];
 
-router.get('/post/:id', async (req, res) => {
-  const post = await BlogPost.findByPk(req.params.id);
-  if (post) {
-    res.render('post', { title: post.title, post });
-  } else {
-    res.status(404).send('Post not found');
-  }
-});
+    if (!title || !content) {
+      errors.push({ msg: 'Please fill in all fields' });
+    }
 
-router.get('/edit/:id', async (req, res) => {
-  const post = await BlogPost.findByPk(req.params.id);
-  if (post) {
-    res.render('edit', { title: 'Edit Post', post });
-  } else {
-    res.status(404).send('Post not found');
-  }
-});
+    if (errors.length > 0) {
+      return res.render('create', {
+        errors,
+        title: 'Create Post',
+        postTitle: title,
+        content
+      });
+    }
 
-router.post('/edit/:id', async (req, res) => {
-  const post = await BlogPost.findByPk(req.params.id);
-  if (post) {
-    await post.update(req.body);
-    res.redirect(`/post/${post.id}`);
-  } else {
-    res.status(404).send('Post not found');
-  }
-});
+    await Blog.create({
+      title,
+      content
+    });
 
-router.post('/delete/:id', async (req, res) => {
-  const post = await BlogPost.findByPk(req.params.id);
-  if (post) {
-    await post.destroy();
+    req.flash('success_msg', 'Post created successfully');
     res.redirect('/');
-  } else {
-    res.status(404).send('Post not found');
+  } catch (err) {
+    console.error(err);
+    req.flash('error_msg', 'Error creating post');
+    res.redirect('/create');
   }
 });
 
-router.get('/stats', async (req, res) => {
-  const posts = await BlogPost.findAll();
-  const lengths = posts.map(post => post.title.length + post.content.length);
-  const stats = {
-    average_length: lengths.reduce((a, b) => a + b, 0) / lengths.length,
-    median_length: lengths.sort((a, b) => a - b)[Math.floor(lengths.length / 2)],
-    max_length: Math.max(...lengths),
-    min_length: Math.min(...lengths),
-    total_length: lengths.reduce((a, b) => a + b, 0)
-  };
-  res.render('stats', { title: 'Post Statistics', ...stats });
+// Stats page
+router.get('/stats', ensureAuthenticated, async (req, res) => {
+  try {
+    const totalPosts = await Blog.count();
+    const stats = {
+      totalPosts,
+      // Add more stats as needed
+    };
+    res.render('stats', { 
+      title: 'Blog Statistics',
+      stats 
+    });
+  } catch (err) {
+    console.error(err);
+    req.flash('error_msg', 'Error loading statistics');
+    res.redirect('/');
+  }
 });
 
 module.exports = router;
-
