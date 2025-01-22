@@ -27,6 +27,8 @@ block content
 
     // Display Posts
     if posts && posts.length
+      if search
+        p.mt-3.text-success Found #{posts.length} post(s) matching "#{search}"
       .row.mt-4
         each post in posts
           .col-md-6.mb-4
@@ -36,12 +38,7 @@ block content
                 p.card-text= post.content
                 small.text-muted Posted on #{post.createdAt.toLocaleDateString()}
     else
-      p.mt-4 No blog posts found matching your search.
-
-
-
-       
-
-
-
-
+      if search
+        p.mt-4.text-warning No blog posts found matching "#{search}". Try a different search term.
+      else
+        p.mt-4 No blog posts yet.
