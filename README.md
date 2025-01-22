@@ -22,8 +22,7 @@ app and improve overall UX
 
 Reece my responsibilities were to add the User authentication feature and relevant tests for this feature. In summary this feature 
 enhances both app security and user experience by prompting the user to make and account a login. This will ensure that the
-users app will be personalised to them and allow them to attach their profile to the posts that they make. Other features are for exmaple
-when creating a password it must have more than 6 characters. this further enhances the security of the platfrom. bcyrpt was used for the passwords
+users app will be personalised to them and allow them to attach their profile to the posts that they make. Other features are for exmaple when creating a password it must have more than 6 characters. this further enhances the security of the platfrom. bcyrpt was used for the passwords
 
 Setup Instructions
 
@@ -33,10 +32,32 @@ confirm that pasword. The system will remember your login details and input them
 you can navigate through the app using "create posts" to add you posts and the search functionality to filter through them. You 
 can also view posts made my other users in this instance between myself and reece and filter through those aswell.
 
-Evidence 
+Evidence is linked below underneath each subheading directly related to the rubric 
 
-Feature implementation
+Feature implementation:
+
+Blog Management Feature
+screenshot showing the index.js file that manages the database connection and imports models https://drive.google.com/file/d/1ApHOyRoGpbYxRWp8DW8E1L9utl_5tIo8/view?usp=drive_link
+screenshot showing the blog.js file that has majority of the code for this feature https://drive.google.com/file/d/1wC75XI3CWgSBIl2rU0732ruMziCZX01D/view?usp=drive_link
+screenshotof index.pug that takes care of the front end for this feature https://drive.google.com/file/d/114gA8RXbn4N0vf1UzdQfDoOqigSmC7cB/view?usp=drive_link
+
+User Authentication Feature 
+
+
+
 Testing 
+
+
+
+
 Security Enhancements
+error when password is incorrect https://drive.google.com/file/d/1R6UZb5YRBcIaFvfymcqmVDZ5PnabFi3F/view?usp=drive_link
+error when user tries to create password with less than 6 characters https://drive.google.com/file/d/1mvQtyoKeilbgNonJm94aX0tEHfBPLbLv/view?usp=drive_link
+error showing the user their email isnt registered https://drive.google.com/file/d/1r1s-STaf0qna9LRF3WHlC4NigH91Nbaq/view?usp=drive_link
+
 Code Quality and Refactoring 
+
+
+
 Git Practices
+link to show commits being used aswell as seperate branches to work on code https://drive.google.com/file/d/1VRxkIHpNntFWA3Wb0S0tp4v5ILiXXLCj/view?usp=drive_link!
