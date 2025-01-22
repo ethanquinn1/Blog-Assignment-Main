@@ -3,13 +3,42 @@ const router = express.Router();
 const { Blog } = require('../models');
 const { ensureAuthenticated } = require('../middleware/auth');
 
-// Get all blog posts
+// Get all blog posts with optional search and sorting
 router.get('/', async (req, res) => {
   try {
-    const posts = await Blog.findAll({ order: [['createdAt', 'DESC']] });
-    res.render('index', { 
+    const { search, sort } = req.query;  // Capture search and sort query parameters
+
+    let searchCondition = {};
+    if (search) {
+      searchCondition = {
+        where: {
+          [Op.or]: [
+            { title: { [Op.like]: `%${search}%` } },  // Search by title
+            { content: { [Op.like]: `%${search}%` } }  // Search by content
+          ]
+        }
+      };
+    }
+
+    let sortCondition = [];
+    if (sort) {
+      const sortParams = sort.split(',');  // Expect sort in the form "field,ASC/DESC"
+      const field = sortParams[0];
+      const order = sortParams[1] ? sortParams[1].toUpperCase() : 'ASC';  // Default to ASC
+      sortCondition = [[field, order]];
+    }
+
+    // Fetch posts with search and/or sort conditions
+    const posts = await Blog.findAll({
+      ...searchCondition,
+      order: sortCondition
+    });
+
+    res.render('index', {
       title: 'Home',
-      posts: posts
+      posts: posts,
+      search: search || '',  // Pass the search term back to the view
+      sort: sort || ''
     });
   } catch (err) {
     console.error(err);
@@ -64,9 +93,9 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
       totalPosts,
       // Add more stats as needed
     };
-    res.render('stats', { 
+    res.render('stats', {
       title: 'Blog Statistics',
-      stats 
+      stats
     });
   } catch (err) {
     console.error(err);
@@ -76,3 +105,4 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
+

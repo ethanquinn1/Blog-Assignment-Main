@@ -7,9 +7,25 @@ block content
     else
       h1 Welcome to our Blog
       p Please login or register to continue.
-    
+
     include partials/messages
 
+    // Search Bar Form
+    form(action="/" method="get")
+      .input-group.mb-3
+        input(type="text" name="search" value="" class="form-control" placeholder="Search" aria-label="Search")
+        button(type="submit" class="btn btn-primary") Search
+
+    // Sort Dropdown Form
+    form(action="/" method="get" style="display:inline-block; margin-left: 10px;")
+      select(name="sort" class="form-select" onchange="this.form.submit()")
+        option(value="" disabled selected) Sort by
+        option(value="createdAt,ASC" selected=sort === 'createdAt,ASC' ? 'selected' : null) Date (Oldest first)
+        option(value="createdAt,DESC" selected=sort === 'createdAt,DESC' ? 'selected' : null) Date (Newest first)
+        option(value="title,ASC" selected=sort === 'title,ASC' ? 'selected' : null) Title (A-Z)
+        option(value="title,DESC" selected=sort === 'title,DESC' ? 'selected' : null) Title (Z-A)
+
+    // Display Posts
     if posts && posts.length
       .row.mt-4
         each post in posts
@@ -21,5 +37,11 @@ block content
                 small.text-muted Posted on #{post.createdAt.toLocaleDateString()}
     else
       p.mt-4 No blog posts yet.
+
+
+
+       
+
+
 
 
