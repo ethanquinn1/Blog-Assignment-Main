@@ -4,18 +4,18 @@ const { Blog } = require('../models');
 const { Op } = require('sequelize');
 const { ensureAuthenticated } = require('../middleware/auth');
 
-// Get all blog posts with optional search and sorting
+
 router.get('/', async (req, res) => {
   try {
-    const { search, sort } = req.query;  // Capture search and sort query parameters
+    const { search, sort } = req.query;  
 
     let searchCondition = {};
     if (search) {
       searchCondition = {
         where: {
           [Op.or]: [
-            { title: { [Op.like]: `%${search}%` } },  // Search by title
-            { content: { [Op.like]: `%${search}%` } }  // Search by content
+            { title: { [Op.like]: `%${search}%` } },  
+            { content: { [Op.like]: `%${search}%` } }  
           ]
         }
       };
@@ -23,13 +23,13 @@ router.get('/', async (req, res) => {
 
     let sortCondition = [];
     if (sort) {
-      const sortParams = sort.split(',');  // Expect sort in the form "field,ASC/DESC"
+      const sortParams = sort.split(',');  
       const field = sortParams[0];
-      const order = sortParams[1] ? sortParams[1].toUpperCase() : 'ASC';  // Default to ASC
+      const order = sortParams[1] ? sortParams[1].toUpperCase() : 'ASC';  
       sortCondition = [[field, order]];
     }
 
-    // Fetch posts with search and/or sort conditions
+    
     const posts = await Blog.findAll({
       ...searchCondition,
       order: sortCondition
@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     res.render('index', {
       title: 'Home',
       posts: posts,
-      search: search || '',  // Pass the search term back to the view
+      search: search || '',  
       sort: sort || ''
     });
   } catch (err) {
@@ -48,12 +48,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create post form
+
 router.get('/create', ensureAuthenticated, (req, res) => {
   res.render('create', { title: 'Create Post' });
 });
 
-// Create post handler
+
 router.post('/create', ensureAuthenticated, async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -86,13 +86,13 @@ router.post('/create', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Stats page
+
 router.get('/stats', ensureAuthenticated, async (req, res) => {
   try {
     const totalPosts = await Blog.count();
     const stats = {
       totalPosts,
-      // Add more stats as needed
+      
     };
     res.render('stats', {
       title: 'Blog Statistics',

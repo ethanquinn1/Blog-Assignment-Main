@@ -10,13 +10,13 @@ block content
 
     include partials/messages
 
-    // Search Bar Form
+    
     form(action="/" method="get")
       .input-group.mb-3
         input(type="text" name="search" value="" class="form-control" placeholder="Search" aria-label="Search")
         button(type="submit" class="btn btn-primary") Search
 
-    // Sort Dropdown Form
+    
     form(action="/" method="get" style="display:inline-block; margin-left: 10px;")
       select(name="sort" class="form-select" onchange="this.form.submit()")
         option(value="" disabled selected) Sort by
@@ -25,7 +25,7 @@ block content
         option(value="title,ASC" selected=sort === 'title,ASC' ? 'selected' : null) Title (A-Z)
         option(value="title,DESC" selected=sort === 'title,DESC' ? 'selected' : null) Title (Z-A)
 
-    // Display Posts
+    
     if posts && posts.length
       if search
         p.mt-3.text-success Found #{posts.length} post(s) matching "#{search}"
