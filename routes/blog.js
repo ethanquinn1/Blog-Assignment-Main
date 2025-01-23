@@ -1,19 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { Blog, User } = require('../models');
-const { Op, fn, col } = require('sequelize');
+const { Blog } = require('../models');
+const { Op } = require('sequelize');
 const { ensureAuthenticated } = require('../middleware/auth');
+
 
 router.get('/', async (req, res) => {
   try {
-    const { search, sort } = req.query;
+    const { search, sort } = req.query;  
+
     let searchCondition = {};
     if (search) {
       searchCondition = {
         where: {
           [Op.or]: [
-            { title: { [Op.like]: `%${search}%` } },
-            { content: { [Op.like]: `%${search}%` } }
+            { title: { [Op.like]: `%${search}%` } },  
+            { content: { [Op.like]: `%${search}%` } }  
           ]
         }
       };
@@ -21,42 +23,36 @@ router.get('/', async (req, res) => {
 
     let sortCondition = [];
     if (sort) {
-      const [field, direction] = sort.split(',');
-      const order = direction ? direction.toUpperCase() : 'ASC';
-      if (['title', 'createdAt'].includes(field)) {
-        sortCondition = [[field, order]];
-      }
+      const sortParams = sort.split(',');  
+      const field = sortParams[0];
+      const order = sortParams[1] ? sortParams[1].toUpperCase() : 'ASC';  
+      sortCondition = [[field, order]];
     }
 
+    
     const posts = await Blog.findAll({
       ...searchCondition,
-      include: [{ model: User, attributes: ['username'] }],
-      order: sortCondition.length ? sortCondition : [['createdAt', 'DESC']]
+      order: sortCondition
     });
-
-    if (req.xhr || process.env.NODE_ENV === 'test') {
-      return res.status(200).json({ posts });
-    }
 
     res.render('index', {
       title: 'Home',
-      posts,
-      search: search || '',
+      posts: posts,
+      search: search || '',  
       sort: sort || ''
     });
   } catch (err) {
     console.error(err);
-    if (req.xhr || process.env.NODE_ENV === 'test') {
-      return res.status(500).json({ error: 'Error loading posts' });
-    }
     req.flash('error_msg', 'Error loading posts');
     res.redirect('/');
   }
 });
 
+
 router.get('/create', ensureAuthenticated, (req, res) => {
   res.render('create', { title: 'Create Post' });
 });
+
 
 router.post('/create', ensureAuthenticated, async (req, res) => {
   try {
@@ -68,9 +64,6 @@ router.post('/create', ensureAuthenticated, async (req, res) => {
     }
 
     if (errors.length > 0) {
-      if (req.xhr || process.env.NODE_ENV === 'test') {
-        return res.status(400).json({ errors });
-      }
       return res.render('create', {
         errors,
         title: 'Create Post',
@@ -79,60 +72,36 @@ router.post('/create', ensureAuthenticated, async (req, res) => {
       });
     }
 
-    const post = await Blog.create({
+    await Blog.create({
       title,
-      content,
-      userId: req.user.id
+      content
     });
 
-    if (req.xhr || process.env.NODE_ENV === 'test') {
-      return res.status(201).json({ post });
-    }
-
     req.flash('success_msg', 'Post created successfully');
-    res.redirect('/blog');
+    res.redirect('/');
   } catch (err) {
     console.error(err);
-    if (req.xhr || process.env.NODE_ENV === 'test') {
-      return res.status(500).json({ error: 'Error creating post' });
-    }
     req.flash('error_msg', 'Error creating post');
-    res.redirect('/blog/create');
+    res.redirect('/create');
   }
 });
+
 
 router.get('/stats', ensureAuthenticated, async (req, res) => {
   try {
     const totalPosts = await Blog.count();
-    const userPosts = await Blog.count({ where: { userId: req.user.id } });
-    const recentPosts = await Blog.findAll({
-      where: { userId: req.user.id },
-      order: [['createdAt', 'DESC']],
-      limit: 5
-    });
-
     const stats = {
       totalPosts,
-      userPosts,
-      recentPosts
+      
     };
-
-    if (req.xhr || process.env.NODE_ENV === 'test') {
-      return res.status(200).json(stats);
-    }
-
     res.render('stats', {
       title: 'Blog Statistics',
-      stats
       stats
     });
   } catch (err) {
     console.error(err);
-    if (req.xhr || process.env.NODE_ENV === 'test') {
-      return res.status(500).json({ error: 'Error loading stats' });
-    }
-    req.flash('error_msg', 'Error loading stats');
-    res.redirect('/blog');
+    req.flash('error_msg', 'Error loading statistics');
+    res.redirect('/');
   }
 });
 

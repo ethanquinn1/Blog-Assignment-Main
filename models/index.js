@@ -1,26 +1,32 @@
 const { Sequelize } = require('sequelize');
 const path = require('path');
+const fs = require('fs');
 
-const env = process.env.NODE_ENV || 'development';
-const config = require('../config/database.config.js')[env];
-
-const sequelize = new Sequelize(config);
-
-const models = {};
-
-const User = require('./user')(sequelize);
-const Blog = require('./blog')(sequelize);
-
-models.User = User;
-models.Blog = Blog;
-
-Object.values(models).forEach(model => {
-  if (model.associate) {
-    model.associate(models);
-  }
+// Initialize Sequelize with SQLite
+const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: path.join(__dirname, '../database.sqlite'),
+  logging: false
 });
 
+// Import models
+const models = {};
+
+// Import User model
+const User = require('./user')(sequelize);
+models.User = User;
+
+// Try to import Blog model if it exists
+try {
+  const Blog = require('./blog')(sequelize);
+  models.Blog = Blog;
+} catch (err) {
+  console.log('Blog model not loaded:', err.message);
+}
+
+// Export models and sequelize instance
 module.exports = {
   sequelize,
   ...models
 };
+

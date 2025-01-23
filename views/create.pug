@@ -5,7 +5,7 @@ block content
     h1 Create New Post
     include partials/messages
     
-    form(action="/blog/create" method="POST")
+    form(action="/create" method="POST")
       .form-group
         label(for="title") Title
         input#title.form-control(type="text" name="title" value=postTitle || '')
@@ -13,3 +13,5 @@ block content
         label(for="content") Content
         textarea#content.form-control(name="content" rows="6")= content || ''
       button.btn.btn-primary(type="submit") Create Post
+
+

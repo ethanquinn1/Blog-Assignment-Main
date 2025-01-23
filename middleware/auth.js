@@ -1,29 +1,17 @@
-const { User } = require('../models');
-
 module.exports = {
-  ensureAuthenticated: async function(req, res, next) {
-    if (process.env.NODE_ENV === 'test') {
-      const testUser = await User.findOne({ where: { username: 'bloguser' } });
-      req.user = testUser;
-      return next();
-    }
+    ensureAuthenticated: (req, res, next) => {
+      if (req.isAuthenticated()) {
+        return next();
+      }
+      req.flash('error', 'Please log in to view this resource');
+      res.redirect('/auth/login');
+    },
     
-    if (req.isAuthenticated()) {
-      return next();
+    forwardAuthenticated: (req, res, next) => {
+      if (!req.isAuthenticated()) {
+        return next();
+      }
+      res.redirect('/dashboard');
     }
-    
-    if (req.xhr) {
-      return res.status(401).json({ message: 'Please log in to view this resource' });
-    }
-    
-    req.flash('error_msg', 'Please log in to view this resource');
-    res.redirect('/auth/login');
-  },
-  
-  forwardAuthenticated: function(req, res, next) {
-    if (process.env.NODE_ENV === 'test' || !req.isAuthenticated()) {
-      return next();
-    }
-    res.redirect('/');
-  }
-};
+  };
+
