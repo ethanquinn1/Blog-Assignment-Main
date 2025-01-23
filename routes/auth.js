@@ -4,23 +4,19 @@ const router = express.Router();
 const { User } = require('../models');
 const { forwardAuthenticated } = require('../middleware/auth');
 
-// Login page
 router.get('/login', forwardAuthenticated, (req, res) => {
-  res.render('login', { title: 'Login' });
+  res.render('login');
 });
 
-// Register page
 router.get('/register', forwardAuthenticated, (req, res) => {
-  res.render('register', { title: 'Register' });
+  res.render('register');
 });
 
-// Register handle
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password, password2 } = req.body;
     const errors = [];
 
-    // Validation
     if (!username || !email || !password || !password2) {
       errors.push({ msg: 'Please fill in all fields' });
     }
@@ -29,77 +25,94 @@ router.post('/register', async (req, res) => {
       errors.push({ msg: 'Passwords do not match' });
     }
 
-    if (password.length < 6) {
-      errors.push({ msg: 'Password should be at least 6 characters' });
-    }
-
     if (errors.length > 0) {
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(400).json({ errors });
+      }
       return res.render('register', {
         errors,
         username,
-        email,
-        title: 'Register'
+        email
       });
     }
 
-    // Check if user exists
-    const existingUser = await User.findOne({
-      where: {
-        email: email
-      }
-    });
+    const existingUser = await User.findOne({ where: { username } });
 
     if (existingUser) {
-      errors.push({ msg: 'Email is already registered' });
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(400).json({ errors: [{ msg: 'Username already exists' }] });
+      }
       return res.render('register', {
-        errors,
+        errors: [{ msg: 'Username already exists' }],
         username,
-        email,
-        title: 'Register'
+        email
       });
     }
 
-    // Create new user
-    const newUser = await User.create({
+    await User.create({
       username,
       email,
       password
     });
 
+    if (req.xhr || req.headers.accept?.includes('json')) {
+      return res.status(201).json({ message: 'Registration successful' });
+    }
+
     req.flash('success_msg', 'You are now registered and can log in');
     res.redirect('/auth/login');
-
   } catch (err) {
     console.error('Registration error:', err);
-    return res.render('register', {
-      errors: [{ msg: 'An error occurred during registration: ' + err.message }],
-      username: req.body.username,
-      email: req.body.email,
-      title: 'Register'
-    });
+    if (req.xhr || req.headers.accept?.includes('json')) {
+      return res.status(500).json({ error: 'Registration failed' });
+    }
+    req.flash('error_msg', 'Registration failed');
+    res.redirect('/auth/register');
   }
 });
 
-// Login handle
 router.post('/login', (req, res, next) => {
-  passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/auth/login',
-    failureFlash: true
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error('Login error:', err);
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(500).json({ message: 'Authentication error' });
+      }
+      req.flash('error_msg', 'Login error');
+      return res.redirect('/auth/login');
+    }
+    
+    if (!user) {
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(401).json({ message: info.message || 'Authentication failed' });
+      }
+      req.flash('error_msg', info.message || 'Authentication failed');
+      return res.redirect('/auth/login');
+    }
+    
+    req.logIn(user, (err) => {
+      if (err) {
+        console.error('Login error:', err);
+        if (req.xhr || req.headers.accept?.includes('json')) {
+          return res.status(500).json({ message: 'Login error' });
+        }
+        req.flash('error_msg', 'Login error');
+        return res.redirect('/auth/login');
+      }
+
+      if (req.xhr || req.headers.accept?.includes('json')) {
+        return res.status(200).json({ message: 'Login successful' });
+      }
+      return res.redirect('/');
+    });
   })(req, res, next);
 });
 
-// Logout handle
 router.get('/logout', (req, res) => {
-  req.logout(function(err) {
-    if (err) {
-      console.error('Logout error:', err);
-      return next(err);
-    }
+  req.logout(() => {
     req.flash('success_msg', 'You are logged out');
     res.redirect('/auth/login');
   });
 });
 
 module.exports = router;
-
