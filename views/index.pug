@@ -8,6 +8,7 @@ block content
       h1 Welcome to our Blog
       p Please login or register to continue.
 
+
     include partials/messages
 
     form(action="/blog" method="get")
@@ -24,6 +25,8 @@ block content
         option(value="title,DESC" selected=sort === 'title,DESC' ? 'selected' : null) Title (Z-A)
 
     if posts && posts.length
+      if search
+        p.mt-3.text-success Found #{posts.length} post(s) matching "#{search}"
       if search
         p.mt-3.text-success Found #{posts.length} post(s) matching "#{search}"
       .row.mt-4
