@@ -1,27 +1,19 @@
-const { Model, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
 module.exports = (sequelize) => {
-  class User extends Model {
-    static associate(models) {
-      User.hasMany(models.Blog, { foreignKey: 'userId' });
-    }
-
-    async validatePassword(password) {
-      return await bcrypt.compare(password, this.getDataValue('password'));
-    }
-
-    static async hashPassword(password) {
-      const salt = await bcrypt.genSalt(10);
-      return await bcrypt.hash(password, salt);
-    }
-  }
-
-  User.init({
+  const User = sequelize.define('User', {
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true
+      unique: true,
+      validate: {
+        len: [3, 30]
+      }
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false
     },
     email: {
       type: DataTypes.STRING,
@@ -30,24 +22,20 @@ module.exports = (sequelize) => {
       validate: {
         isEmail: true
       }
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      set(value) {
-        if (value && (value.startsWith('$2a$') || value.startsWith('$2b$'))) {
-          this.setDataValue('password', value);
-        } else if (value) {
-          const salt = bcrypt.genSaltSync(10);
-          const hash = bcrypt.hashSync(value, salt);
-          this.setDataValue('password', hash);
-        }
-      }
     }
-  }, {
-    sequelize,
-    modelName: 'User'
   });
+
+  // Hash password before saving
+  User.beforeCreate(async (user) => {
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
+  });
+
+  // Method to validate password
+  User.prototype.validatePassword = async function(password) {
+    return await bcrypt.compare(password, this.password);
+  };
 
   return User;
 };
+
