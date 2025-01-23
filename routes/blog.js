@@ -1,15 +1,45 @@
 const express = require('express');
 const router = express.Router();
 const { Blog } = require('../models');
+const { Op } = require('sequelize');
 const { ensureAuthenticated } = require('../middleware/auth');
 
-// Get all blog posts
+
 router.get('/', async (req, res) => {
   try {
-    const posts = await Blog.findAll({ order: [['createdAt', 'DESC']] });
-    res.render('index', { 
+    const { search, sort } = req.query;  
+
+    let searchCondition = {};
+    if (search) {
+      searchCondition = {
+        where: {
+          [Op.or]: [
+            { title: { [Op.like]: `%${search}%` } },  
+            { content: { [Op.like]: `%${search}%` } }  
+          ]
+        }
+      };
+    }
+
+    let sortCondition = [];
+    if (sort) {
+      const sortParams = sort.split(',');  
+      const field = sortParams[0];
+      const order = sortParams[1] ? sortParams[1].toUpperCase() : 'ASC';  
+      sortCondition = [[field, order]];
+    }
+
+    
+    const posts = await Blog.findAll({
+      ...searchCondition,
+      order: sortCondition
+    });
+
+    res.render('index', {
       title: 'Home',
-      posts: posts
+      posts: posts,
+      search: search || '',  
+      sort: sort || ''
     });
   } catch (err) {
     console.error(err);
@@ -18,12 +48,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create post form
+
 router.get('/create', ensureAuthenticated, (req, res) => {
   res.render('create', { title: 'Create Post' });
 });
 
-// Create post handler
+
 router.post('/create', ensureAuthenticated, async (req, res) => {
   try {
     const { title, content } = req.body;
@@ -56,17 +86,17 @@ router.post('/create', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Stats page
+
 router.get('/stats', ensureAuthenticated, async (req, res) => {
   try {
     const totalPosts = await Blog.count();
     const stats = {
       totalPosts,
-      // Add more stats as needed
+      
     };
-    res.render('stats', { 
+    res.render('stats', {
       title: 'Blog Statistics',
-      stats 
+      stats
     });
   } catch (err) {
     console.error(err);
@@ -76,3 +106,4 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
+
