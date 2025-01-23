@@ -124,7 +124,6 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
     res.render('stats', {
       title: 'Blog Statistics',
       stats
-      stats
     });
   } catch (err) {
     console.error(err);
